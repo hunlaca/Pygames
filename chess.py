@@ -3,10 +3,13 @@ from turtle import position
 import pygame
 import os
 
+pygame.font.init()
 WIDTH,HEIGHT  = 480,480
 WIN = pygame.display.set_mode((WIDTH,HEIGHT))
 
 pygame.display.set_caption("Chess")
+CHECK_MATE = pygame.font.SysFont('comicsans',50)
+
 
 FPS = 60
 ROW = 8
@@ -223,8 +226,6 @@ class Pawn(Piece):
                             break
                         else:
                             return "Check"
-                    
-                    
 
                 self.position_x = new_position_x
                 self.position_y = new_position_y
@@ -339,17 +340,27 @@ def check_if_good_move(can_move,selected,pos):
     selected.position_x = original_x
     selected.position_y = original_y
     after = len(Piece.instances)
+    try:
+        if before > after:
+            Piece.instances.append(Piece.bin[-1])
+    except:
+        pass
+    
     if check != None:
+
         return False
     else:
-        try:
-            if before > after:
-                Piece.instances.append(Piece.bin[-1])
-        except:
-            pass
         return True
-    
-        
+
+def check_check_mate(can_move):
+    for instance in Piece.instances:
+        if instance.color == can_move:
+            for x in range(8):
+                for y in range(8):
+                    check_mate_result = check_if_good_move(can_move,instance,(x,y))
+                    if check_mate_result == True:
+                        return False
+    return True
 def main():
     run = True
     clock = pygame.time.Clock()
@@ -360,6 +371,15 @@ def main():
     can_move = "white"
     while(run):
         clock.tick(FPS)
+        if check_check_mate(can_move) == True:
+            check_mate = CHECK_MATE.render("CHECK MATE", 1, (255,255,255))
+            WIN.blit(check_mate,(WIDTH/2 - check_mate.get_width()/2, HEIGHT/2 - check_mate.get_height()/2))
+            pygame.display.update()
+            pygame.time.delay(4000)
+            Piece.instances.clear()
+            Piece.bin.clear()
+            Piece.moves.clear()
+            main()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -370,8 +390,6 @@ def main():
                 pos.append(int(tuple_pos[0]/X))
                 pos.append(int(tuple_pos[1]/X))
 
-                current_king = check_if_check(can_move)
-       
                 if select == None:
                     select = move(pos,None,can_move)
                 else:  
