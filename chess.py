@@ -1,4 +1,5 @@
 from cmath import pi
+from pickle import FALSE
 from turtle import position
 import pygame
 import os
@@ -21,8 +22,9 @@ X = 60
 
 class Piece:
     instances = []
-    moves = []
+    positions = []
     bin = []
+    moves = [] #if something do error maybe a reference to this
     def __init__(self,name,file_name,color,position_x,position_y):
         self.__class__.instances.append(self)
         self.name = name
@@ -34,7 +36,9 @@ class Piece:
         self.position_y = position_y
 
     def succesful_move(self,color,piece,cordinate):
-        self.__class__.moves.append([color,piece,cordinate])
+        pass
+        #self.__class__.positions.append([color,piece,cordinate])
+        #self.__class__.moves.append([color,piece,cordinate])
         
     def knock(self,position_x,position_y,color):
         for piece in self.__class__.instances:
@@ -49,7 +53,7 @@ class Piece:
 class King(Piece):
     def __init__(self,name,file_name,color,position_x,position_y):
         super().__init__(name,file_name,color,position_x,position_y)
-    def movement(self,new_position_x,new_position_y):
+    def movement(self,new_position_x,new_position_y,Test):
         if abs(new_position_x-self.position_x) == 1 and abs(new_position_y-self.position_y) == 1 or abs(new_position_x-self.position_x) == 1 and abs(new_position_y-self.position_y) == 0 or abs(new_position_x-self.position_x) == 0 and abs(new_position_y-self.position_y) == 1:
 
             for piece in self.__class__.instances:
@@ -62,11 +66,48 @@ class King(Piece):
             self.position_y = new_position_y
             self.succesful_move(self.color,self.name,(self.position_x,self.position_y))
             return True
+        elif abs(new_position_x-self.position_x) == 2 and abs(new_position_y-self.position_y) == 0 and Test == False:
+            current_rook = None
+            problem = None
+            
+            for piece in self.__class__.instances:
+                if piece.position_x > self.position_x and self.position_x < new_position_x:
+                    if piece.name == "Rook" and piece.position_y == self.position_y:
+                        current_rook = piece
+                    if (piece.position_x-self.position_x == 2 and piece.position_y == self.position_y) or (piece.position_x-self.position_x == 1 and piece.position_y == self.position_y):
+                        print("problem1")
+                        problem = True
+           
+  
+                elif piece.position_x < self.position_x and self.position_x > new_position_x:
+                    if piece.name == "Rook" and piece.position_y == self.position_y:
+                        current_rook = piece
+                    if (self.position_x-piece.position_x == 1 and piece.position_y == self.position_y) or (self.position_x-piece.position_x == 2 and piece.position_y == self.position_y) or (self.position_x-piece.position_x == 3 and piece.position_y == self.position_y):
+                        print("problem2")
+                        problem = True
+            
 
+            if problem == True or current_rook == None:
+                return
+
+            for move in self.__class__.moves:
+                if move[0] == self.name and move[3] == self.color:
+                    return
+                if move[0] == current_rook.name and move[3] == current_rook.color and move[1] == current_rook.position_x and move[2] == current_rook.position_y:
+                    return
+
+            self.position_x = new_position_x
+            self.position_y = new_position_y
+            if self.position_x < current_rook.position_x:
+                current_rook.position_x = new_position_x-1
+            else:
+                current_rook.position_x = new_position_x+1
+            self.succesful_move(self.color,self.name,(self.position_x,self.position_y))
+            return True
 class Queen(Piece):
     def __init__(self,name,file_name,color,position_x,position_y):
         super().__init__(name,file_name,color,position_x,position_y)
-    def movement(self,new_position_x,new_position_y):
+    def movement(self,new_position_x,new_position_y,Test):
         if new_position_x == self.position_x or new_position_y == self.position_y or abs(new_position_x-self.position_x) == abs(new_position_y-self.position_y):
             knock = False
             check = False
@@ -122,7 +163,7 @@ class Queen(Piece):
 class Rook(Piece):
     def __init__(self,name,file_name,color,position_x,position_y):
         super().__init__(name,file_name,color,position_x,position_y)
-    def movement(self,new_position_x,new_position_y):
+    def movement(self,new_position_x,new_position_y,Test):
         if new_position_x == self.position_x or new_position_y == self.position_y:
             knock = False
             check = False
@@ -157,7 +198,7 @@ class Rook(Piece):
 class Bishop(Piece):
     def __init__(self,name,file_name,color,position_x,position_y):
         super().__init__(name,file_name,color,position_x,position_y)
-    def movement(self,new_position_x,new_position_y):
+    def movement(self,new_position_x,new_position_y,Test):
         if abs(new_position_x-self.position_x) == abs(new_position_y-self.position_y):
             knock = False
             check = False
@@ -194,7 +235,7 @@ class Bishop(Piece):
 class Knight(Piece):
     def __init__(self,name,file_name,color,position_x,position_y):
         super().__init__(name,file_name,color,position_x,position_y)
-    def movement(self,new_position_x,new_position_y):
+    def movement(self,new_position_x,new_position_y,Test):
         if abs(new_position_x-self.position_x) == 1 and abs(new_position_y-self.position_y) ==2 or abs(new_position_y-self.position_y) == 1 and abs(new_position_x-self.position_x) == 2:
             for piece in self.__class__.instances:
                 if piece.position_x == new_position_x and piece.position_y == new_position_y:
@@ -210,7 +251,7 @@ class Knight(Piece):
 class Pawn(Piece):
     def __init__(self,name,file_name,color,position_x,position_y):
         super().__init__(name,file_name,color,position_x,position_y)
-    def movement(self,new_position_x,new_position_y):
+    def movement(self,new_position_x,new_position_y,Test):
         if abs(new_position_y-self.position_y) == 1 and abs(new_position_x-self.position_x) <=1:
             if self.color == "black" and new_position_y > self.position_y or self.color == "white" and new_position_y < self.position_y:
                 for index,piece in enumerate(self.__class__.instances):
@@ -229,6 +270,9 @@ class Pawn(Piece):
 
                 self.position_x = new_position_x
                 self.position_y = new_position_y
+                if (self.position_y == 7 and self.color == "black" and Test == False) or (self.position_y == 0 and self.color == "white" and Test == False):
+                    Queen("Queen","{0}_queen.png".format(self.color),self.color,self.position_x,self.position_y)
+                    self.__class__.instances.remove(self)
                 self.succesful_move(self.color,self.name,(self.position_x,self.position_y))
                 return True
         elif abs(new_position_y-self.position_y) == 2 and abs(new_position_x-self.position_x) <=1 and new_position_x == self.position_x:
@@ -304,8 +348,9 @@ def move(pos,moveable_piece,can_move):
 
     if moveable_piece != None and moveable_piece.color == can_move:
         if moveable_piece.position_x != pos[0] or moveable_piece.position_y != pos[1]:
-            result = moveable_piece.movement(pos[0],pos[1])
+            result = moveable_piece.movement(pos[0],pos[1],False)
             if result == True:
+                Piece.moves.append([moveable_piece.name,moveable_piece.position_x,moveable_piece.position_y,moveable_piece.color])
                 if can_move == "white":
                     can_move = "black"
                 else:
@@ -327,15 +372,17 @@ def check_if_check(can_move):
     if current_king != None:
         for instance in Piece.instances:
             if instance.color != can_move:
-                asd = instance.movement(current_king.position_x,current_king.position_y)
+                asd = instance.movement(current_king.position_x,current_king.position_y,True)
                 if asd == "Check":
                     return current_king
 
-def check_if_good_move(can_move,selected,pos):
+def check_if_good_move(can_move,selected,pos,draw_check):
     original_x = selected.position_x
     original_y = selected.position_y
     before = len(Piece.instances)
-    selected.movement(pos[0],pos[1])
+    selected.movement(pos[0],pos[1],True)
+    if selected.position_x == original_x and selected.position_y == original_y and draw_check == True:
+        return False
     check = check_if_check(can_move)
     selected.position_x = original_x
     selected.position_y = original_y
@@ -357,10 +404,40 @@ def check_check_mate(can_move):
         if instance.color == can_move:
             for x in range(8):
                 for y in range(8):
-                    check_mate_result = check_if_good_move(can_move,instance,(x,y))
+                    check_mate_result = check_if_good_move(can_move,instance,(x,y),False)
                     if check_mate_result == True:
                         return False
     return True
+
+def stale_mate(can_move):
+    for instance in Piece.instances:
+        if instance.color == can_move:
+            for x in range(8):
+                for y in range(8):
+                    good_move = check_if_good_move(can_move,instance,(x,y),True)
+                    if good_move == True:
+                        return False
+    return True
+def check_draw(can_move):
+    if len(Piece.instances) == 2:
+        if Piece.instances[-1].name == "King" and Piece.instances[-2].name == "King":
+            return True
+
+    draw = stale_mate(can_move)
+    if draw == True:
+        return True
+
+
+def message(msg):
+    check_mate = CHECK_MATE.render(msg, 1, (255,255,255))
+    WIN.blit(check_mate,(WIDTH/2 - check_mate.get_width()/2, HEIGHT/2 - check_mate.get_height()/2))
+    pygame.display.update()
+    pygame.time.delay(4000)
+    Piece.instances.clear()
+    Piece.bin.clear()
+    Piece.positions.clear()
+    main()
+
 def main():
     run = True
     clock = pygame.time.Clock()
@@ -369,17 +446,16 @@ def main():
     pos = None
     select = None
     can_move = "white"
+    
     while(run):
+        #print(Piece.moves)
+        #print("------")
         clock.tick(FPS)
         if check_check_mate(can_move) == True:
-            check_mate = CHECK_MATE.render("CHECK MATE", 1, (255,255,255))
-            WIN.blit(check_mate,(WIDTH/2 - check_mate.get_width()/2, HEIGHT/2 - check_mate.get_height()/2))
-            pygame.display.update()
-            pygame.time.delay(4000)
-            Piece.instances.clear()
-            Piece.bin.clear()
-            Piece.moves.clear()
-            main()
+            message("CHECK MATE")
+            
+        if check_draw(can_move) == True:
+            message("DRAW")
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -393,7 +469,7 @@ def main():
                 if select == None:
                     select = move(pos,None,can_move)
                 else:  
-                    move_result = check_if_good_move(can_move,select,pos)
+                    move_result = check_if_good_move(can_move,select,pos,False)
                     if move_result != False:
                         can_move = move(pos,select,can_move)
                     select= None
